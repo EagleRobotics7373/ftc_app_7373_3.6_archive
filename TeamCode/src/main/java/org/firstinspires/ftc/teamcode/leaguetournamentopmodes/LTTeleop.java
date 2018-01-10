@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.leaguetournamentopmodes;
 
+import android.provider.Settings;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -69,6 +71,8 @@ public class LTTeleop extends OpMode {
   //ColorSensor colorSensorRight;
 
     BNO055IMU imu;
+
+    GlobalVars vars = new GlobalVars();
 
   @Override
   public void init() {
@@ -136,19 +140,19 @@ public class LTTeleop extends OpMode {
 
     // Run the Intake
     if(gamepad2.right_trigger > 0){
-        intake.setPower(.5);
+        intake.setPower(1);
     } else if(gamepad2.left_trigger > 0){
-        intake.setPower(-.5);
+        intake.setPower(-1);
     } else if(gamepad2.right_bumper){
-      intake.setPower(.5);
+      intake.setPower(1);
     } else if(gamepad2.left_bumper){
-      intake.setPower(-.5);
+      intake.setPower(-1);
     }else{
       intake.setPower(0);
     }
 
     // Set the jewel manipulator position
-    jewelManipulator.setPosition(.5);
-    jewelRotator.setPosition(0);
+    jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
+    jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
   }
 }

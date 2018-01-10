@@ -69,21 +69,12 @@ public class LTAuto extends LinearOpMode{
 
     // Lift System
     // Threaded rod lift
-    DcMotor leftThreadedRodLift;
-    DcMotor rightThreadedRodLift;
-
-    // Intake/Scorer System
-    // Intake
-    Servo leftIntake;
-    Servo rightIntake;
+    DcMotor lift;
+    DcMotor intake;
 
     // Jewel Manipulator
     Servo jewelManipulator;
     Servo jewelRotator;
-
-    double leftPosition = 0;
-    double rightPosition = 1;
-    double middlePosition = .5;
 
     ColorSensor colorSensorLeft;
     ColorSensor colorSensorRight;
@@ -97,6 +88,15 @@ public class LTAuto extends LinearOpMode{
     Color teamColor = Color.NULL;
     StartingPosition startingPosition = StartingPosition.NULL;
 
+    GlobalVars vars = new GlobalVars();
+
+    // Arrays to store angle values for each position
+    // L , C , R
+    int[] RedLeft = {0 , 0, 0};
+    int[] RedRight = {0, 0, 0};
+    int[] BlueLeft = {0, 0, 0};
+    int[] BlueRight = {0, 0, 0};
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -109,11 +109,8 @@ public class LTAuto extends LinearOpMode{
 
         holonomic = new Holonomic(leftFrontMotor, leftRearMotor, rightFrontMotor, rightRearMotor);
 
-        leftThreadedRodLift = hardwareMap.dcMotor.get("leftThreadedRodLift");
-        rightThreadedRodLift = hardwareMap.dcMotor.get("rightThreadedRodLift");
-
-        leftIntake = hardwareMap.servo.get("leftIntake");
-        rightIntake = hardwareMap.servo.get("rightIntake");
+        lift = hardwareMap.dcMotor.get("lift");
+        intake = hardwareMap.dcMotor.get("intake");
 
         jewelManipulator = hardwareMap.servo.get("jewelManipulator");
         jewelRotator = hardwareMap.servo.get("jewelRotator");
@@ -133,11 +130,8 @@ public class LTAuto extends LinearOpMode{
         imu.initialize(parameters);
 
         // Set all servo positions here...
-        jewelManipulator.setPosition(1);
-        jewelRotator.setPosition(middlePosition);
-
-        leftIntake.setPosition(1);
-        rightIntake.setPosition(0);
+        jewelManipulator.setPosition(vars.jewelManipulatorTopPosition);
+        jewelRotator.setPosition(vars.jewelRotatorMidPosition);
 
         // Set up Vuforia
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -160,11 +154,11 @@ public class LTAuto extends LinearOpMode{
             else if (gamepad1.b)
                 teamColor = Color.RED;
 
-             if (gamepad1.right_bumper) {
-             startingPosition = StartingPosition.RIGHT;
-             } else if (gamepad1.left_bumper) {
-             startingPosition = StartingPosition.LEFT;
-             }
+            if (gamepad1.right_bumper) {
+                startingPosition = StartingPosition.RIGHT;
+            } else if (gamepad1.left_bumper) {
+                startingPosition = StartingPosition.LEFT;
+            }
 
 
             telemetry.addData("Alliance Color: ", teamColor.toString());
@@ -173,100 +167,197 @@ public class LTAuto extends LinearOpMode{
             telemetry.update();
         }
 
-        // Lower the Jewel Manipulator
-        jewelManipulator.setPosition(0);
-        sleep(3000);
-
-        // Go to each case for each color
-        // Check the Color
-        // Rotate Forward or Backwards based on color
-        if(teamColor == Color.BLUE){
-            if(colorSensorLeft.blue() > colorSensorLeft.red() && colorSensorRight.red() > colorSensorRight.blue()){
-                jewelRotator.setPosition(rightPosition);
-                telemetry.addData("B", "R");
-
-            } else if(colorSensorRight.blue() > colorSensorRight.red() && colorSensorLeft.red() > colorSensorLeft.blue()){
-                jewelRotator.setPosition(leftPosition);
-                telemetry.addData("B", "L");
-            }
-
-        } else if (teamColor == Color.RED) {
-            if(colorSensorLeft.blue() > colorSensorLeft.red() && colorSensorRight.red() > colorSensorRight.blue()){
-                jewelRotator.setPosition(leftPosition);
-                telemetry.addData("R", "L");
-            } else if(colorSensorRight.blue() > colorSensorRight.red() && colorSensorLeft.red() > colorSensorLeft.blue()){
-                jewelRotator.setPosition(rightPosition);
-                telemetry.addData("R", "R");
-            }
-        }
-        telemetry.update();
-
-        sleep(500);
-        jewelManipulator.setPosition(.5);
-        sleep(500);
-        jewelRotator.setPosition(middlePosition);
-        sleep(500);
-        jewelManipulator.setPosition(1);
-
-        // Grab that block
-        leftIntake.setPosition(.5);
-        rightIntake.setPosition(.5);
-
-        // Rasie the lift just barely
-        leftThreadedRodLift.setPower(1);
-        rightThreadedRodLift.setPower(1);
-        sleep(500);
-        leftThreadedRodLift.setPower(0);
-        rightThreadedRodLift.setPower(0);
-        sleep(500);
-
-        // Drive Off Platform
-        if(teamColor == Color.BLUE){
-            holonomic.run(-.5,0,0);
-            if(startingPosition == StartingPosition.LEFT){
-                sleep(1600);
-            }else if(startingPosition == StartingPosition.RIGHT){
-                sleep(2500);
-            }
-        } else if(teamColor == Color.RED){
-            holonomic.run(.5,0,0);
-            if(startingPosition == StartingPosition.LEFT){
-                sleep(1800);
-            }else if(startingPosition == StartingPosition.RIGHT){
-                sleep(1000);
-            }
+        // Get vuMark
+        // Make 3 attempts every 500ms
+        RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
+        for(int i = 0; i < 3; i++){
+            if( vuMark != RelicRecoveryVuMark.UNKNOWN)
+                break;
+            sleep(500);
+            vuMark = RelicRecoveryVuMark.from(relicTemplate);
         }
 
-        // Rotate to line up to score
-        if(teamColor == Color.BLUE){
-            if(startingPosition == StartingPosition.LEFT){
-               rotate(130);
-            }else if(startingPosition == StartingPosition.RIGHT){
-                rotate(-55);
-            }
-        } else if(teamColor == Color.RED){
-            if(startingPosition == StartingPosition.LEFT){
-                rotate(-55);
-            }else if(startingPosition == StartingPosition.RIGHT){
-                rotate(20);
-            }
-        }
-        holonomic.stop();
-        // Drive forward to score
-        holonomic.run(.5,0,0);
-        sleep(1500);
-        holonomic.stop();
-
-        //Release and Backup
-        leftIntake.setPosition(1);
-        rightIntake.setPosition(0);
+        // Lower Jewel Manipulator
+        jewelManipulator.setPosition(vars.jewelManipulatorLoweredPosition);
         sleep(1000);
-        holonomic.run(-.5, 0, 0);
-        sleep(250);
+
+        switch(teamColor){
+            case BLUE:
+                telemetry.addData("Color :", "Blue");
+                telemetry.update();
+                // Check color condition and move jewelRotator
+                if(colorSensorLeft.blue() > colorSensorRight.blue() &&
+                        colorSensorRight.red() > colorSensorLeft.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                } else if(colorSensorLeft.blue() < colorSensorRight.blue() &&
+                        colorSensorRight.red() < colorSensorLeft.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                }
+
+                // Set position for jewel arm and grab block/raise lift
+                sleep(500);
+                intake.setPower(1);
+                jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
+                sleep(500);
+                intake.setPower(0);
+                lift.setPower(-1);
+                jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
+                jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
+                sleep(500);
+                lift.setPower(0);
+
+
+                // Drive Forward
+                holonomic.run(.5, 0, 0);
+                sleep(2000);
+
+                switch(startingPosition){
+                    case LEFT:
+                        // How long to drive forward
+                        sleep(1000);
+
+                        // Rotate based on vuMark
+                        switch (vuMark){
+                            case LEFT:
+                                telemetry.addData("VuMark :", "Left");
+                                telemetry.update();
+                                rotate(BlueLeft[0]);
+                                break;
+                            case UNKNOWN:
+                                telemetry.addData("VuMark : !!!", "Null!!!");
+                            case CENTER:
+                                telemetry.addData("VuMark :", "Center");
+                                telemetry.update();
+                                rotate(BlueLeft[1]);
+                                break;
+                            case RIGHT:
+                                telemetry.addData("VuMark :", "Right");
+                                telemetry.update();
+                                rotate(BlueLeft[2]);
+                                break;
+                        }
+
+                        break;
+                    case RIGHT:
+                        // How long to drive forward
+                        sleep(1500);
+
+                        // Rotate based on vuMark
+                        switch (vuMark){
+                            case LEFT:
+                                telemetry.addData("VuMark :", "Left");
+                                telemetry.update();
+                                rotate(BlueRight[0]);
+                                break;
+                            case UNKNOWN:
+                                telemetry.addData("VuMark : !!!", "Null!!!");
+                            case CENTER:
+                                telemetry.addData("VuMark :", "Center");
+                                telemetry.update();
+                                rotate(BlueRight[1]);
+                                break;
+                            case RIGHT:
+                                telemetry.addData("VuMark :", "Right");
+                                telemetry.update();
+                                rotate(BlueRight[2]);
+                                break;
+                        }
+                        break;
+                }
+                break;
+            case RED:
+                telemetry.addData("Color :", "Red");
+                telemetry.update();
+                // Check color condition and move jewelRotator
+                if(colorSensorLeft.blue() < colorSensorRight.blue() &&
+                        colorSensorRight.red() < colorSensorLeft.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                } else if(colorSensorLeft.blue() > colorSensorRight.blue() &&
+                        colorSensorRight.red() > colorSensorLeft.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                }
+
+                sleep(500);
+                jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
+                sleep(500);
+                jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
+                jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
+                sleep(500);
+
+
+
+                // Drive backward
+                holonomic.run(-.5, 0, 0);
+
+                switch(startingPosition){
+                    case LEFT:
+                        // How long to drive backward
+                        sleep(1000);
+
+                        // Rotate based on vuMark
+                        switch (vuMark){
+                            case LEFT:
+                                telemetry.addData("VuMark :", "Left");
+                                telemetry.update();
+                                rotate(RedLeft[0]);
+                                break;
+                            case UNKNOWN:
+                                telemetry.addData("VuMark : !!!", "Null!!!");
+                            case CENTER:
+                                telemetry.addData("VuMark :", "Center");
+                                telemetry.update();
+                                rotate(RedLeft[1]);
+                                break;
+                            case RIGHT:
+                                telemetry.addData("VuMark :", "Right");
+                                telemetry.update();
+                                rotate(RedLeft[2]);
+                                break;
+                        }
+                        break;
+                    case RIGHT:
+                        // How long to drive backward
+                        sleep(2000);
+
+                        // Rotate based on vuMark
+                        switch (vuMark){
+                            case LEFT:
+                                telemetry.addData("VuMark :", "Left");
+                                telemetry.update();
+                                rotate(RedRight[0]);
+                                break;
+                            case UNKNOWN:
+                                telemetry.addData("VuMark : !!!", "Null!!!");
+                            case CENTER:
+                                telemetry.addData("VuMark :", "Center");
+                                telemetry.update();
+                                rotate(RedRight[1]);
+                                break;
+                            case RIGHT:
+                                telemetry.addData("VuMark :", "Right");
+                                telemetry.update();
+                                rotate(RedRight[2]);
+                                break;
+                        }
+                        break;
+                }
+                break;
+        }
+
+        // Drive forward into scoring zone
+        holonomic.run(.5,0, 0);
+        sleep(1000);
         holonomic.stop();
 
+        // Open Intake
+        intake.setPower(-1);
+        sleep(500);
+        intake.setPower(0);
 
-
+        // Back away but stay in the safe zone
+        holonomic.run(-.5, 0, 0);
+        sleep(500);
+        holonomic.stop();
     }
 
     private Orientation orientation(){
@@ -274,14 +365,13 @@ public class LTAuto extends LinearOpMode{
     }
 
     private float[] imuAngles(){
-           Orientation angles = imu.getAngularOrientation();
-           return new float[]{angles.firstAngle, angles.secondAngle, angles.thirdAngle};
+        Orientation angles = imu.getAngularOrientation();
+        return new float[]{angles.firstAngle, angles.secondAngle, angles.thirdAngle};
     }
 
     private float imuXAngle(){
         return imuAngles()[0];
     }
-
     private float imuYAngle(){
         return imuAngles()[1];
     }
@@ -289,6 +379,7 @@ public class LTAuto extends LinearOpMode{
         return imuAngles()[2];
     }
 
+    /*
     private void rotate(int target){
         if (target < 0) {
             float temp = imuXAngle();
@@ -313,6 +404,35 @@ public class LTAuto extends LinearOpMode{
         }
         holonomic.stop();
     }
+    */
+
+    private void rotate(int target){
+        double power = .3;
+        if (target < 0) {
+            float temp = imuXAngle();
+            while (temp > target && opModeIsActive()) {
+                holonomic.run(0, 0, power);
+
+                telemetry.addData("IMU: ", temp);
+                telemetry.update();
+
+                temp = imuXAngle();
+                power = (.2*(temp/target)) + .1;
+            }
+        } else if (target > 0) {
+            float temp = imuXAngle();
+            while (temp < target && opModeIsActive()) {
+                holonomic.run(0, 0, -power);
+
+                telemetry.addData("IMU: ", temp);
+                telemetry.update();
+
+                temp = imuXAngle();
+                power = (.2*(temp/target)) + .1;
+            }
+        }
+        holonomic.stop();
+    }
 }
 
 enum Color {
@@ -322,3 +442,4 @@ enum Color {
 enum StartingPosition {
     LEFT, RIGHT, NULL
 }
+

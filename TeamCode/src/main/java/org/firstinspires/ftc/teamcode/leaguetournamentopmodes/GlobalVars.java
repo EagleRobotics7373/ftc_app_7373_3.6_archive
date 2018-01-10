@@ -10,10 +10,10 @@ public class GlobalVars {
     public double jewelManipulatorLoweredPosition = 0;
     public double jewelManipulatorStoredPosition = .75;
 
-    public double jewelRotatorLeftPostiion = 0;
+    public double jewelRotatorLeftPosition = 0;
     public double jewelRotatorMidPosition = .5;
     public double jewelRotatorRightPosition = 1;
-    public double jewelRotatorStoredPosition = .5;
+    public double jewelRotatorStoredPosition = 0;
 
     public GlobalVars(){
 
