@@ -92,10 +92,10 @@ public class LTAuto extends LinearOpMode{
 
     // Arrays to store angle values for each position
     // L , C , R
-    int[] RedLeft = {0 , 0, 0};
-    int[] RedRight = {0, 0, 0};
-    int[] BlueLeft = {0, 0, 0};
-    int[] BlueRight = {0, 0, 0};
+    int[] RedLeft = {0 , 50, 0};
+    int[] RedRight = {0, -155, 0};
+    int[] BlueLeft = {0, -20, 0};
+    int[] BlueRight = {0, 55, 0};
 
     @Override
     public void runOpMode() {
@@ -169,47 +169,71 @@ public class LTAuto extends LinearOpMode{
 
         // Get vuMark
         // Make 3 attempts every 500ms
+
         RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
+        /*
         for(int i = 0; i < 3; i++){
             if( vuMark != RelicRecoveryVuMark.UNKNOWN)
                 break;
             sleep(500);
             vuMark = RelicRecoveryVuMark.from(relicTemplate);
         }
+        */
+
+        // Force Center
+        vuMark = RelicRecoveryVuMark.UNKNOWN;
+
+        telemetry.addData("Vumark: ", vuMark.toString());
+        telemetry.update();
 
         // Lower Jewel Manipulator
-        jewelManipulator.setPosition(vars.jewelManipulatorLoweredPosition);
+        jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
         sleep(1000);
+        jewelManipulator.setPosition(vars.jewelManipulatorLoweredPosition);
+        sleep(3000);
 
         switch(teamColor){
             case BLUE:
                 telemetry.addData("Color :", "Blue");
                 telemetry.update();
                 // Check color condition and move jewelRotator
+                /*
                 if(colorSensorLeft.blue() > colorSensorRight.blue() &&
                         colorSensorRight.red() > colorSensorLeft.red()){
                     jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                    telemetry.addData("Right", "Blah");
+                    telemetry.update();
                 } else if(colorSensorLeft.blue() < colorSensorRight.blue() &&
                         colorSensorRight.red() < colorSensorLeft.red()){
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                    telemetry.addData("Left", "Blah");
+                    telemetry.update();
+                } else {
+
+                }
+                */
+
+                // Check color condition and move jewelRotator
+                if(colorSensorRight.red() > colorSensorRight.blue()){
+                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                    telemetry.addData("Right", "Blah");
+                    telemetry.update();
+                } else if(colorSensorLeft.red() > colorSensorLeft.blue()){
+                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                    telemetry.addData("Left", "Blah");
+                    telemetry.update();
+                } else {
+
                 }
 
                 // Set position for jewel arm and grab block/raise lift
-                sleep(500);
-                intake.setPower(1);
-                jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
-                sleep(500);
-                intake.setPower(0);
-                lift.setPower(-1);
-                jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
-                jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
-                sleep(500);
-                lift.setPower(0);
+                sleep(1000);
+                resetLiftandJewel();
 
 
                 // Drive Forward
                 holonomic.run(.5, 0, 0);
-                sleep(2000);
+
 
                 switch(startingPosition){
                     case LEFT:
@@ -240,7 +264,8 @@ public class LTAuto extends LinearOpMode{
                         break;
                     case RIGHT:
                         // How long to drive forward
-                        sleep(1500);
+                        sleep(1000);
+
 
                         // Rotate based on vuMark
                         switch (vuMark){
@@ -269,22 +294,28 @@ public class LTAuto extends LinearOpMode{
                 telemetry.addData("Color :", "Red");
                 telemetry.update();
                 // Check color condition and move jewelRotator
+                /*
                 if(colorSensorLeft.blue() < colorSensorRight.blue() &&
                         colorSensorRight.red() < colorSensorLeft.red()){
                     jewelRotator.setPosition(vars.jewelRotatorRightPosition);
                 } else if(colorSensorLeft.blue() > colorSensorRight.blue() &&
                         colorSensorRight.red() > colorSensorLeft.red()){
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                }*/
+                if(colorSensorRight.blue() > colorSensorRight.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                    telemetry.addData("Right", "Blah");
+                    telemetry.update();
+                } else if(colorSensorLeft.blue() > colorSensorLeft.red()){
+                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                    telemetry.addData("Left", "Blah");
+                    telemetry.update();
+                } else {
+
                 }
 
-                sleep(500);
-                jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
-                sleep(500);
-                jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
-                jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
-                sleep(500);
-
-
+                sleep(1000);
+                resetLiftandJewel();
 
                 // Drive backward
                 holonomic.run(-.5, 0, 0);
@@ -292,7 +323,8 @@ public class LTAuto extends LinearOpMode{
                 switch(startingPosition){
                     case LEFT:
                         // How long to drive backward
-                        sleep(1000);
+                        sleep(2000);
+
 
                         // Rotate based on vuMark
                         switch (vuMark){
@@ -317,7 +349,8 @@ public class LTAuto extends LinearOpMode{
                         break;
                     case RIGHT:
                         // How long to drive backward
-                        sleep(2000);
+                        sleep(1000);
+
 
                         // Rotate based on vuMark
                         switch (vuMark){
@@ -350,12 +383,12 @@ public class LTAuto extends LinearOpMode{
         holonomic.stop();
 
         // Open Intake
-        intake.setPower(-1);
+        intake.setPower(1);
         sleep(500);
         intake.setPower(0);
 
         // Back away but stay in the safe zone
-        holonomic.run(-.5, 0, 0);
+        holonomic.run(-.3, 0, 0);
         sleep(500);
         holonomic.stop();
     }
@@ -379,7 +412,7 @@ public class LTAuto extends LinearOpMode{
         return imuAngles()[2];
     }
 
-    /*
+
     private void rotate(int target){
         if (target < 0) {
             float temp = imuXAngle();
@@ -404,8 +437,26 @@ public class LTAuto extends LinearOpMode{
         }
         holonomic.stop();
     }
-    */
 
+    void rotate(int drive, int time){
+        holonomic.run(0,0,drive);
+        sleep(time);
+        holonomic.stop();
+    }
+
+    private void resetLiftandJewel(){
+        // Set position for jewel arm and grab block/raise lift
+        intake.setPower(-1);
+        jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
+        sleep(2000);
+        lift.setPower(-1);
+        jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
+        jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
+        sleep(250);
+        lift.setPower(0);
+    }
+
+    /*
     private void rotate(int target){
         double power = .3;
         if (target < 0) {
@@ -433,6 +484,7 @@ public class LTAuto extends LinearOpMode{
         }
         holonomic.stop();
     }
+    */
 }
 
 enum Color {

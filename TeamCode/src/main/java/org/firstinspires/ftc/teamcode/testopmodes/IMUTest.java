@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.testopmodes;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -53,7 +54,7 @@ import org.firstinspires.ftc.teamcode.eaglerobotics.library.drivetrain.Holonomic
  * Demonstrates empty OpMode
  */
 @Autonomous(name = "IMU Test", group = "Test")
-//@Disabled
+@Disabled
 public class IMUTest extends LinearOpMode{
 
     private ElapsedTime runtime = new ElapsedTime();

@@ -13,7 +13,7 @@ public class GlobalVars {
     public double jewelRotatorLeftPosition = 0;
     public double jewelRotatorMidPosition = .5;
     public double jewelRotatorRightPosition = 1;
-    public double jewelRotatorStoredPosition = 0;
+    public double jewelRotatorStoredPosition = .5;
 
     public GlobalVars(){
 

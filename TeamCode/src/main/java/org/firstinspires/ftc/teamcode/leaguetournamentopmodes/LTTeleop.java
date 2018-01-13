@@ -39,6 +39,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.eaglerobotics.library.drivetrain.Holonomic;
 import org.firstinspires.ftc.teamcode.eaglerobotics.library.functions.MathOperations;
 
@@ -136,17 +140,17 @@ public class LTTeleop extends OpMode {
             MathOperations.pow(gamepad1.right_stick_x, 3));
 
     //Run the Lift spool
-      lift.setPower(-gamepad2.left_stick_y);
+      lift.setPower(gamepad2.left_stick_y);
 
     // Run the Intake
     if(gamepad2.right_trigger > 0){
-        intake.setPower(1);
+        intake.setPower(-.75);
     } else if(gamepad2.left_trigger > 0){
-        intake.setPower(-1);
+        intake.setPower(.75);
     } else if(gamepad2.right_bumper){
-      intake.setPower(1);
+      intake.setPower(-.75);
     } else if(gamepad2.left_bumper){
-      intake.setPower(-1);
+      intake.setPower(.75);
     }else{
       intake.setPower(0);
     }
@@ -154,5 +158,31 @@ public class LTTeleop extends OpMode {
     // Set the jewel manipulator position
     jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
     jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
+
+    // Send the imu position to the telemetry
+    telemetry.addData("IMU X Angle: ", imuXAngle());
+    telemetry.addData("IMU Y Angle: ", imuYAngle());
+    telemetry.addData("IMU Z Angle", imuZAngle());
+    telemetry.update();
+
+  }
+
+  private Orientation orientation(){
+    return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+  }
+
+  private float[] imuAngles(){
+    Orientation angles = imu.getAngularOrientation();
+    return new float[]{angles.firstAngle, angles.secondAngle, angles.thirdAngle};
+  }
+
+  private float imuXAngle(){
+    return imuAngles()[0];
+  }
+  private float imuYAngle(){
+    return imuAngles()[1];
+  }
+  private float imuZAngle(){
+    return imuAngles()[2];
   }
 }
