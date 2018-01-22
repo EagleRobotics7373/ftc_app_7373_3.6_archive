@@ -92,10 +92,10 @@ public class LTAuto extends LinearOpMode{
 
     // Arrays to store angle values for each position
     // L , C , R
-    int[] RedLeft = {0 , 50, 0};
-    int[] RedRight = {0, -155, 0};
-    int[] BlueLeft = {0, -20, 0};
-    int[] BlueRight = {0, 55, 0};
+    int[] RedLeft = {-105 , -77, -50};
+    int[] RedRight = {122, 133, 167};
+    int[] BlueLeft = {0, 20, 0};
+    int[] BlueRight = {-100, -85, -65};
 
     @Override
     public void runOpMode() {
@@ -171,17 +171,15 @@ public class LTAuto extends LinearOpMode{
         // Make 3 attempts every 500ms
 
         RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
-        /*
         for(int i = 0; i < 3; i++){
             if( vuMark != RelicRecoveryVuMark.UNKNOWN)
                 break;
             sleep(500);
             vuMark = RelicRecoveryVuMark.from(relicTemplate);
         }
-        */
 
         // Force Center
-        vuMark = RelicRecoveryVuMark.UNKNOWN;
+        // vuMark = RelicRecoveryVuMark.UNKNOWN;
 
         telemetry.addData("Vumark: ", vuMark.toString());
         telemetry.update();
@@ -245,7 +243,7 @@ public class LTAuto extends LinearOpMode{
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
-                                rotate(BlueLeft[0]);
+                                rotateWide(BlueLeft[0]);
                                 break;
                             case UNKNOWN:
                                 telemetry.addData("VuMark : !!!", "Null!!!");
@@ -264,7 +262,7 @@ public class LTAuto extends LinearOpMode{
                         break;
                     case RIGHT:
                         // How long to drive forward
-                        sleep(1000);
+                        sleep(1300);
 
 
                         // Rotate based on vuMark
@@ -272,7 +270,7 @@ public class LTAuto extends LinearOpMode{
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
-                                rotate(BlueRight[0]);
+                                rotateWide(BlueRight[0]);
                                 break;
                             case UNKNOWN:
                                 telemetry.addData("VuMark : !!!", "Null!!!");
@@ -311,7 +309,6 @@ public class LTAuto extends LinearOpMode{
                     telemetry.addData("Left", "Blah");
                     telemetry.update();
                 } else {
-
                 }
 
                 sleep(1000);
@@ -323,7 +320,7 @@ public class LTAuto extends LinearOpMode{
                 switch(startingPosition){
                     case LEFT:
                         // How long to drive backward
-                        sleep(2000);
+                        sleep(1750);
 
 
                         // Rotate based on vuMark
@@ -331,7 +328,7 @@ public class LTAuto extends LinearOpMode{
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
-                                rotate(RedLeft[0]);
+                                rotateWide(RedLeft[0]);
                                 break;
                             case UNKNOWN:
                                 telemetry.addData("VuMark : !!!", "Null!!!");
@@ -351,25 +348,24 @@ public class LTAuto extends LinearOpMode{
                         // How long to drive backward
                         sleep(1000);
 
-
                         // Rotate based on vuMark
                         switch (vuMark){
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
-                                rotate(RedRight[0]);
+                                rotateWide(RedRight[0]);
                                 break;
                             case UNKNOWN:
                                 telemetry.addData("VuMark : !!!", "Null!!!");
                             case CENTER:
                                 telemetry.addData("VuMark :", "Center");
                                 telemetry.update();
-                                rotate(RedRight[1]);
+                                rotateWide(RedRight[1]);
                                 break;
                             case RIGHT:
                                 telemetry.addData("VuMark :", "Right");
                                 telemetry.update();
-                                rotate(RedRight[2]);
+                                rotateWide(RedRight[2]);
                                 break;
                         }
                         break;
@@ -378,14 +374,27 @@ public class LTAuto extends LinearOpMode{
         }
 
         // Drive forward into scoring zone
+
         holonomic.run(.5,0, 0);
-        sleep(1000);
+        sleep(1250);
         holonomic.stop();
+        sleep(1000);
+
+        lift.setPower(.5);
+        sleep(250);
+        lift.setPower(0);
+        sleep(500);
+
+        holonomic.run(.5,0, 0);
+        sleep(500);
+        holonomic.stop();
+        sleep(1000);
 
         // Open Intake
         intake.setPower(1);
-        sleep(500);
+        sleep(750);
         intake.setPower(0);
+        sleep(1000);
 
         // Back away but stay in the safe zone
         holonomic.run(-.3, 0, 0);
@@ -413,7 +422,8 @@ public class LTAuto extends LinearOpMode{
     }
 
 
-    private void rotate(int target){
+    private void rotateOldFashioned(int target){
+        target = -target;
         if (target < 0) {
             float temp = imuXAngle();
             while (temp > target && opModeIsActive()) {
@@ -438,9 +448,41 @@ public class LTAuto extends LinearOpMode{
         holonomic.stop();
     }
 
-    void rotate(int drive, int time){
-        holonomic.run(0,0,drive);
-        sleep(time);
+    void rotateWide(int target){
+        target = -target;
+        ElapsedTime time = new ElapsedTime();
+        time.reset();
+        time.startTime();
+        float temp = imuXAngle();
+        while(time.seconds() <  7 && opModeIsActive()) {
+            temp = imuXAngle();
+            telemetry.addData("IMU: ", temp);
+            telemetry.update();
+            if (temp > target) {
+                holonomic.run(0, 0, .35 - (time.seconds()*.05) );
+            } else if (temp < target) {
+                holonomic.run(0, 0, -.35 + (time.seconds()*.05) );
+            }
+        }
+        holonomic.stop();
+    }
+
+    void rotate(int target){
+        target = -target;
+        ElapsedTime time = new ElapsedTime();
+        time.reset();
+        time.startTime();
+        float temp = imuXAngle();
+        while(time.seconds() <  5 && opModeIsActive()) {
+            temp = imuXAngle();
+            telemetry.addData("IMU: ", temp);
+            telemetry.update();
+            if (temp > target) {
+                    holonomic.run(0, 0, .25 - (time.seconds()*.05) );
+            } else if (temp < target) {
+                    holonomic.run(0, 0, -.25 + (time.seconds()*.05) );
+            }
+        }
         holonomic.stop();
     }
 
@@ -456,35 +498,6 @@ public class LTAuto extends LinearOpMode{
         lift.setPower(0);
     }
 
-    /*
-    private void rotate(int target){
-        double power = .3;
-        if (target < 0) {
-            float temp = imuXAngle();
-            while (temp > target && opModeIsActive()) {
-                holonomic.run(0, 0, power);
-
-                telemetry.addData("IMU: ", temp);
-                telemetry.update();
-
-                temp = imuXAngle();
-                power = (.2*(temp/target)) + .1;
-            }
-        } else if (target > 0) {
-            float temp = imuXAngle();
-            while (temp < target && opModeIsActive()) {
-                holonomic.run(0, 0, -power);
-
-                telemetry.addData("IMU: ", temp);
-                telemetry.update();
-
-                temp = imuXAngle();
-                power = (.2*(temp/target)) + .1;
-            }
-        }
-        holonomic.stop();
-    }
-    */
 }
 
 enum Color {

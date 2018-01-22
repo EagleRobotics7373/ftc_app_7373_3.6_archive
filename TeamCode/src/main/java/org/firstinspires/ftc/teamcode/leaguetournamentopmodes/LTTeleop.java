@@ -63,9 +63,12 @@ public class LTTeleop extends OpMode {
 
   Holonomic holonomic;
 
+  double k = 1;
+
   // Threaded rod lift
   DcMotor lift;
   DcMotor intake;
+  boolean intakeRun = false;
 
   // Jewel Manipulator
   Servo jewelManipulator;
@@ -135,35 +138,36 @@ public class LTTeleop extends OpMode {
   @Override
   public void loop(){
     telemetry.addData("Status", "Run Time: " + runtime.toString());
+
+    // Adjust k value
+    k = 1 - (.2*gamepad1.right_trigger);
+
     // Run using cubic and Y reversed
-    holonomic.run(MathOperations.pow(-gamepad1.left_stick_y, 3), MathOperations.pow(gamepad1.left_stick_x, 3),
-            MathOperations.pow(gamepad1.right_stick_x, 3));
+    holonomic.run(MathOperations.pow(-k*gamepad1.left_stick_y, 3), MathOperations.pow(k*gamepad1.left_stick_x, 3),
+            MathOperations.pow(k*gamepad1.right_stick_x, 3));
 
     //Run the Lift spool
       lift.setPower(gamepad2.left_stick_y);
 
     // Run the Intake
-    if(gamepad2.right_trigger > 0){
-        intake.setPower(-.75);
-    } else if(gamepad2.left_trigger > 0){
-        intake.setPower(.75);
+    if(gamepad2.left_trigger > 0){
+        intake.setPower(1);
+        intakeRun = false;
     } else if(gamepad2.right_bumper){
-      intake.setPower(-.75);
+      intake.setPower(-1);
+      intakeRun = false;
     } else if(gamepad2.left_bumper){
-      intake.setPower(.75);
-    }else{
+      intake.setPower(1);
+      intakeRun = false;
+    } else if(gamepad2.right_trigger > 0 || intakeRun){
+      intake.setPower(-1);
+      intakeRun = true;
+    } else {
       intake.setPower(0);
     }
 
-    // Set the jewel manipulator position
     jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
     jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
-
-    // Send the imu position to the telemetry
-    telemetry.addData("IMU X Angle: ", imuXAngle());
-    telemetry.addData("IMU Y Angle: ", imuYAngle());
-    telemetry.addData("IMU Z Angle", imuZAngle());
-    telemetry.update();
 
   }
 
