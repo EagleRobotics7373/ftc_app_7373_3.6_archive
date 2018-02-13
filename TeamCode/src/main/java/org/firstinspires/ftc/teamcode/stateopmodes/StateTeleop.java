@@ -27,13 +27,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.leaguetournamentopmodes;
-
-import android.provider.Settings;
+package org.firstinspires.ftc.teamcode.stateopmodes;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -51,8 +48,8 @@ import org.firstinspires.ftc.teamcode.eaglerobotics.library.functions.MathOperat
  * Demonstrates empty OpMode
  */
 @TeleOp(name = "Teleop LT", group = "LT")
-@Disabled
-public class LTTeleop extends OpMode {
+//@Disabled
+public class StateTeleop extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();
 
@@ -75,12 +72,17 @@ public class LTTeleop extends OpMode {
   Servo jewelManipulator;
   Servo jewelRotator;
 
+  // Relic Arm System
+  DcMotor threadedRodLift;
+  Servo relicGrabber;
+  Servo slideStop;
+
   //ColorSensor colorSensorLeft;
   //ColorSensor colorSensorRight;
 
     BNO055IMU imu;
 
-    GlobalVars vars = new GlobalVars();
+    GlobalVarsState vars = new GlobalVarsState();
 
   @Override
   public void init() {
@@ -100,6 +102,10 @@ public class LTTeleop extends OpMode {
 
     jewelManipulator = hardwareMap.servo.get("jewelManipulator");
     jewelRotator = hardwareMap.servo.get("jewelRotator");
+
+    threadedRodLift = hardwareMap.dcMotor.get("threadedRodLift");
+    relicGrabber = hardwareMap.servo.get("relicGrabber");
+    slideStop = hardwareMap.servo.get("slideStop");
 
       BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
       parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
@@ -170,6 +176,16 @@ public class LTTeleop extends OpMode {
     jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
     jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
 
+    // Relic Grabber
+    threadedRodLift.setPower(gamepad2.right_stick_y);
+    if(gamepad2.y && gamepad1.y)
+      slideStop.setPosition(vars.slideStopOpen);
+    else
+      slideStop.setPosition(vars.slideStopClosed);
+    if (gamepad2.a)
+      relicGrabber.setPosition(vars.relicGrabberClosed);
+    else if(gamepad2.b)
+      relicGrabber.setPosition(vars.relicGrabberOpen);
   }
 
   private Orientation orientation(){

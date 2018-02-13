@@ -27,12 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode.leaguetournamentopmodes;
+package org.firstinspires.ftc.teamcode.stateopmodes;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -54,8 +53,8 @@ import org.firstinspires.ftc.teamcode.eaglerobotics.library.drivetrain.Holonomic
  * Demonstrates empty OpMode
  */
 @Autonomous(name = "Autonomous LT", group = "LT")
-@Disabled
-public class LTAuto extends LinearOpMode{
+//@Disabled
+public class StateAuto extends LinearOpMode{
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -88,7 +87,7 @@ public class LTAuto extends LinearOpMode{
     Color teamColor = Color.NULL;
     StartingPosition startingPosition = StartingPosition.NULL;
 
-    GlobalVars vars = new GlobalVars();
+    GlobalVarsState vars = new GlobalVarsState();
 
     // Arrays to store angle values for each position
     // L , C , R
