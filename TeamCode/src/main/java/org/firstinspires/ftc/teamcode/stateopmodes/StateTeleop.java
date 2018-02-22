@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.eaglerobotics.library.functions.MathOperat
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Teleop LT", group = "LT")
+@TeleOp(name = "State Teleop", group = "State")
 //@Disabled
 public class StateTeleop extends OpMode {
 
@@ -63,10 +63,14 @@ public class StateTeleop extends OpMode {
 
   double k = 1;
 
-  // Threaded rod lift
+  // Lift and Grabber
   DcMotor lift;
-  DcMotor intake;
-  boolean intakeRun = false;
+  DcMotor spinner;
+  double lastPower = .15;
+  Servo leftTop;
+  Servo leftBottom;
+  Servo rightTop;
+  Servo rightBottom;
 
   // Jewel Manipulator
   Servo jewelManipulator;
@@ -96,8 +100,13 @@ public class StateTeleop extends OpMode {
 
     holonomic = new Holonomic(leftFrontMotor, leftRearMotor, rightFrontMotor, rightRearMotor);
 
+
     lift = hardwareMap.dcMotor.get("lift");
-    intake = hardwareMap.dcMotor.get("intake");
+    spinner = hardwareMap.dcMotor.get("spinner");
+    leftTop = hardwareMap.servo.get("leftTop");
+    leftBottom = hardwareMap.servo.get("leftBottom");
+    rightTop = hardwareMap.servo.get("rightTop");
+    rightBottom = hardwareMap.servo.get("rightBottom");
 
 
     jewelManipulator = hardwareMap.servo.get("jewelManipulator");
@@ -157,27 +166,38 @@ public class StateTeleop extends OpMode {
       lift.setPower(gamepad2.left_stick_y);
 
     // Run the Intake
-    if(gamepad2.left_trigger > 0){
-        intake.setPower(1);
-        intakeRun = false;
-    } else if(gamepad2.right_bumper){
-      intake.setPower(-1);
-      intakeRun = false;
-    } else if(gamepad2.left_bumper){
-      intake.setPower(1);
-      intakeRun = false;
-    } else if(gamepad2.right_trigger > 0 || intakeRun){
-      intake.setPower(-1);
-      intakeRun = true;
+    if(gamepad2.dpad_left){
+      spinner.setPower(.5);
+      lastPower = .2;
+    } else if(gamepad2.dpad_right){
+      spinner.setPower(-.5);
+      lastPower = -.2;
     } else {
-      intake.setPower(0);
+      spinner.setPower(lastPower);
     }
+
+    if(gamepad2.right_trigger > .05){
+      rightTop.setPosition(vars.rightTopClosed);
+      leftTop.setPosition(vars.leftTopClosed);
+    } else if(gamepad2.right_bumper){
+      rightTop.setPosition(vars.rightTopOpen);
+      leftTop.setPosition(vars.leftTopOpen);
+    }
+
+    if(gamepad2.left_trigger > .05){
+      rightBottom.setPosition(vars.rightBottomClosed);
+      leftBottom.setPosition(vars.leftBottomClosed);
+    } else if(gamepad2.left_bumper){
+      rightBottom.setPosition(vars.rightBottomOpen);
+      leftBottom.setPosition(vars.leftBottomOpen);
+    }
+
 
     jewelManipulator.setPosition(vars.jewelManipulatorStoredPosition);
     jewelRotator.setPosition(vars.jewelRotatorStoredPosition);
 
     // Relic Grabber
-    threadedRodLift.setPower(gamepad2.right_stick_y);
+    threadedRodLift.setPower(-gamepad2.right_stick_y);
     if(gamepad2.y && gamepad1.y)
       slideStop.setPosition(vars.slideStopOpen);
     else

@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.stateopmodes;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -54,7 +55,7 @@ import org.firstinspires.ftc.teamcode.eaglerobotics.library.drivetrain.Holonomic
  */
 @Autonomous(name = "Autonomous LT", group = "LT")
 //@Disabled
-public class StateAuto extends LinearOpMode{
+public class StateAuto extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -67,9 +68,13 @@ public class StateAuto extends LinearOpMode{
     Holonomic holonomic;
 
     // Lift System
-    // Threaded rod lift
     DcMotor lift;
-    DcMotor intake;
+    DcMotor spinner;
+    Servo leftTop;
+    Servo leftBottom;
+    Servo rightTop;
+    Servo rightBottom;
+
 
     // Jewel Manipulator
     Servo jewelManipulator;
@@ -91,7 +96,7 @@ public class StateAuto extends LinearOpMode{
 
     // Arrays to store angle values for each position
     // L , C , R
-    int[] RedLeft = {-105 , -77, -50};
+    int[] RedLeft = {-105, -77, -50};
     int[] RedRight = {122, 133, 167};
     int[] BlueLeft = {0, 20, 0};
     int[] BlueRight = {-100, -85, -65};
@@ -109,7 +114,12 @@ public class StateAuto extends LinearOpMode{
         holonomic = new Holonomic(leftFrontMotor, leftRearMotor, rightFrontMotor, rightRearMotor);
 
         lift = hardwareMap.dcMotor.get("lift");
-        intake = hardwareMap.dcMotor.get("intake");
+        spinner = hardwareMap.dcMotor.get("spinner");
+        leftTop = hardwareMap.servo.get("leftTop");
+        leftBottom = hardwareMap.servo.get("leftBottom");
+        rightTop = hardwareMap.servo.get("rightTop");
+        rightBottom = hardwareMap.servo.get("rightBottom");
+
 
         jewelManipulator = hardwareMap.servo.get("jewelManipulator");
         jewelRotator = hardwareMap.servo.get("jewelRotator");
@@ -118,11 +128,11 @@ public class StateAuto extends LinearOpMode{
         colorSensorRight = hardwareMap.colorSensor.get("colorSensorRight");
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -131,6 +141,12 @@ public class StateAuto extends LinearOpMode{
         // Set all servo positions here...
         jewelManipulator.setPosition(vars.jewelManipulatorTopPosition);
         jewelRotator.setPosition(vars.jewelRotatorMidPosition);
+
+        leftTop.setPosition(vars.leftTopStored);
+        rightTop.setPosition(vars.rightTopStored);
+        leftBottom.setPosition(vars.leftBottomStored);
+        rightBottom.setPosition(vars.rightBottomStored);
+
 
         // Set up Vuforia
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -170,8 +186,8 @@ public class StateAuto extends LinearOpMode{
         // Make 3 attempts every 500ms
 
         RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
-        for(int i = 0; i < 3; i++){
-            if( vuMark != RelicRecoveryVuMark.UNKNOWN)
+        for (int i = 0; i < 3; i++) {
+            if (vuMark != RelicRecoveryVuMark.UNKNOWN)
                 break;
             sleep(500);
             vuMark = RelicRecoveryVuMark.from(relicTemplate);
@@ -189,7 +205,7 @@ public class StateAuto extends LinearOpMode{
         jewelManipulator.setPosition(vars.jewelManipulatorLoweredPosition);
         sleep(3000);
 
-        switch(teamColor){
+        switch (teamColor) {
             case BLUE:
                 telemetry.addData("Color :", "Blue");
                 telemetry.update();
@@ -211,11 +227,11 @@ public class StateAuto extends LinearOpMode{
                 */
 
                 // Check color condition and move jewelRotator
-                if(colorSensorRight.red() > colorSensorRight.blue()){
+                if (colorSensorRight.red() > colorSensorRight.blue()) {
                     jewelRotator.setPosition(vars.jewelRotatorRightPosition);
                     telemetry.addData("Right", "Blah");
                     telemetry.update();
-                } else if(colorSensorLeft.red() > colorSensorLeft.blue()){
+                } else if (colorSensorLeft.red() > colorSensorLeft.blue()) {
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
                     telemetry.addData("Left", "Blah");
                     telemetry.update();
@@ -232,13 +248,13 @@ public class StateAuto extends LinearOpMode{
                 holonomic.run(.5, 0, 0);
 
 
-                switch(startingPosition){
+                switch (startingPosition) {
                     case LEFT:
                         // How long to drive forward
                         sleep(1000);
 
                         // Rotate based on vuMark
-                        switch (vuMark){
+                        switch (vuMark) {
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
@@ -265,7 +281,7 @@ public class StateAuto extends LinearOpMode{
 
 
                         // Rotate based on vuMark
-                        switch (vuMark){
+                        switch (vuMark) {
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
@@ -299,11 +315,11 @@ public class StateAuto extends LinearOpMode{
                         colorSensorRight.red() > colorSensorLeft.red()){
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
                 }*/
-                if(colorSensorRight.blue() > colorSensorRight.red()){
+                if (colorSensorRight.blue() > colorSensorRight.red()) {
                     jewelRotator.setPosition(vars.jewelRotatorRightPosition);
                     telemetry.addData("Right", "Blah");
                     telemetry.update();
-                } else if(colorSensorLeft.blue() > colorSensorLeft.red()){
+                } else if (colorSensorLeft.blue() > colorSensorLeft.red()) {
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
                     telemetry.addData("Left", "Blah");
                     telemetry.update();
@@ -316,14 +332,14 @@ public class StateAuto extends LinearOpMode{
                 // Drive backward
                 holonomic.run(-.5, 0, 0);
 
-                switch(startingPosition){
+                switch (startingPosition) {
                     case LEFT:
                         // How long to drive backward
                         sleep(1750);
 
 
                         // Rotate based on vuMark
-                        switch (vuMark){
+                        switch (vuMark) {
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
@@ -348,7 +364,7 @@ public class StateAuto extends LinearOpMode{
                         sleep(1000);
 
                         // Rotate based on vuMark
-                        switch (vuMark){
+                        switch (vuMark) {
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
@@ -374,7 +390,7 @@ public class StateAuto extends LinearOpMode{
 
         // Drive forward into scoring zone
 
-        holonomic.run(.5,0, 0);
+        holonomic.run(.5, 0, 0);
         sleep(1250);
         holonomic.stop();
         sleep(1000);
@@ -384,15 +400,14 @@ public class StateAuto extends LinearOpMode{
         lift.setPower(0);
         sleep(500);
 
-        holonomic.run(.5,0, 0);
+        holonomic.run(.5, 0, 0);
         sleep(500);
         holonomic.stop();
         sleep(1000);
 
         // Open Intake
-        intake.setPower(1);
-        sleep(750);
-        intake.setPower(0);
+        leftBottom.setPosition(vars.leftBottomClosed);
+        rightBottom.setPosition(vars.rightBottomClosed);
         sleep(1000);
 
         // Back away but stay in the safe zone
@@ -401,27 +416,29 @@ public class StateAuto extends LinearOpMode{
         holonomic.stop();
     }
 
-    private Orientation orientation(){
+    private Orientation orientation() {
         return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
     }
 
-    private float[] imuAngles(){
+    private float[] imuAngles() {
         Orientation angles = imu.getAngularOrientation();
         return new float[]{angles.firstAngle, angles.secondAngle, angles.thirdAngle};
     }
 
-    private float imuXAngle(){
+    private float imuXAngle() {
         return imuAngles()[0];
     }
-    private float imuYAngle(){
+
+    private float imuYAngle() {
         return imuAngles()[1];
     }
-    private float imuZAngle(){
+
+    private float imuZAngle() {
         return imuAngles()[2];
     }
 
 
-    private void rotateOldFashioned(int target){
+    private void rotateOldFashioned(int target) {
         target = -target;
         if (target < 0) {
             float temp = imuXAngle();
@@ -447,47 +464,48 @@ public class StateAuto extends LinearOpMode{
         holonomic.stop();
     }
 
-    void rotateWide(int target){
+    void rotateWide(int target) {
         target = -target;
         ElapsedTime time = new ElapsedTime();
         time.reset();
         time.startTime();
         float temp = imuXAngle();
-        while(time.seconds() <  7 && opModeIsActive()) {
+        while (time.seconds() < 7 && opModeIsActive()) {
             temp = imuXAngle();
             telemetry.addData("IMU: ", temp);
             telemetry.update();
             if (temp > target) {
-                holonomic.run(0, 0, .35 - (time.seconds()*.05) );
+                holonomic.run(0, 0, .35 - (time.seconds() * .05));
             } else if (temp < target) {
-                holonomic.run(0, 0, -.35 + (time.seconds()*.05) );
+                holonomic.run(0, 0, -.35 + (time.seconds() * .05));
             }
         }
         holonomic.stop();
     }
 
-    void rotate(int target){
+    void rotate(int target) {
         target = -target;
         ElapsedTime time = new ElapsedTime();
         time.reset();
         time.startTime();
         float temp = imuXAngle();
-        while(time.seconds() <  5 && opModeIsActive()) {
+        while (time.seconds() < 5 && opModeIsActive()) {
             temp = imuXAngle();
             telemetry.addData("IMU: ", temp);
             telemetry.update();
             if (temp > target) {
-                    holonomic.run(0, 0, .25 - (time.seconds()*.05) );
+                holonomic.run(0, 0, .25 - (time.seconds() * .05));
             } else if (temp < target) {
-                    holonomic.run(0, 0, -.25 + (time.seconds()*.05) );
+                holonomic.run(0, 0, -.25 + (time.seconds() * .05));
             }
         }
         holonomic.stop();
     }
 
-    private void resetLiftandJewel(){
+    private void resetLiftandJewel() {
         // Set position for jewel arm and grab block/raise lift
-        intake.setPower(-1);
+        leftBottom.setPosition(vars.leftBottomClosed);
+        rightBottom.setPosition(vars.rightBottomClosed);
         jewelManipulator.setPosition(vars.jewelManipulatorMiddlePosition);
         sleep(2000);
         lift.setPower(-1);
