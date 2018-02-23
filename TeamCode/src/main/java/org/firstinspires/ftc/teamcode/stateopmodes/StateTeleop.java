@@ -66,7 +66,7 @@ public class StateTeleop extends OpMode {
   // Lift and Grabber
   DcMotor lift;
   DcMotor spinner;
-  double lastPower = .15;
+  double lastPower = 0;
   Servo leftTop;
   Servo leftBottom;
   Servo rightTop;

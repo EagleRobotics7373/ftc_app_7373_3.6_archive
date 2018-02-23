@@ -6,12 +6,12 @@ package org.firstinspires.ftc.teamcode.stateopmodes;
 
 public class GlobalVarsState {
     public double jewelManipulatorMiddlePosition = .5;
-    public double jewelManipulatorTopPosition = 1;
-    public double jewelManipulatorLoweredPosition = 0;
-    public double jewelManipulatorStoredPosition = .75;
+    public double jewelManipulatorTopPosition = 0;
+    public double jewelManipulatorLoweredPosition = .67;
+    public double jewelManipulatorStoredPosition = .35;
 
     public double jewelRotatorLeftPosition = 0;
-    public double jewelRotatorMidPosition = .5;
+    public double jewelRotatorMidPosition = .48;
     public double jewelRotatorRightPosition = 1;
     public double jewelRotatorStoredPosition = .5;
 
@@ -27,11 +27,11 @@ public class GlobalVarsState {
 
     public double leftBottomStored = 0;
     public double leftBottomClosed = 0.6;
-    public double leftBottomOpen = .9;
+    public double leftBottomOpen = 1;
 
     public double rightTopStored = 0;
     public double rightTopClosed = .5;
-    public double rightTopOpen = .7;
+    public double rightTopOpen = .8;
 
     public double rightBottomStored = 1;
     public double rightBottomClosed = .6;
