@@ -101,10 +101,10 @@ public class StateAuto extends LinearOpMode {
 
     // Arrays to store angle values for each position
     // L , C , R
-    int[] RedLeft = {-112, -95, -75};
-    int[] RedRight = {165, 179, -160};
-    int[] BlueLeft = {0, 20, 0};
-    int[] BlueRight = {-103, -85, -62};
+    int[] RedLeft = {-111, -90, -71};
+    int[] RedRight = {157, 177, -162};
+    int[] BlueLeft = {8, 28, 41};
+    int[] BlueRight = {-106, -86, -68};
 
     @Override
     public void runOpMode() {
@@ -232,11 +232,21 @@ public class StateAuto extends LinearOpMode {
 
                 // Check color condition and move jewelRotator
                 if (colorSensorRight.red() > colorSensorRight.blue()) {
-                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                    double pos = vars.jewelRotatorMidPosition;
+                    for (int i = 0; i < 4; i++) {
+                        pos += .03;
+                        jewelRotator.setPosition(pos);
+                        sleep(250);
+                    }
                     telemetry.addData("Right", "Blah");
                     telemetry.update();
                 } else if (colorSensorLeft.red() > colorSensorLeft.blue()) {
-                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                    double pos = vars.jewelRotatorMidPosition;
+                    for (int i = 0; i < 4; i++) {
+                        pos -= .03;
+                        jewelRotator.setPosition(pos);
+                        sleep(250);
+                    }
                     telemetry.addData("Left", "Blah");
                     telemetry.update();
                 } else {
@@ -255,7 +265,7 @@ public class StateAuto extends LinearOpMode {
                 switch (startingPosition) {
                     case LEFT:
                         // How long to drive forward
-                        sleep(1000);
+                        sleep(800);
 
                         // Rotate based on vuMark
                         switch (vuMark) {
@@ -320,11 +330,21 @@ public class StateAuto extends LinearOpMode {
                     jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
                 }*/
                 if (colorSensorRight.blue() > colorSensorRight.red()) {
-                    jewelRotator.setPosition(vars.jewelRotatorRightPosition);
+                    double pos = vars.jewelRotatorMidPosition;
+                    for (int i = 0; i < 4; i++) {
+                        pos += .03;
+                        jewelRotator.setPosition(pos);
+                        sleep(250);
+                    }
                     telemetry.addData("Right", "Blah");
                     telemetry.update();
                 } else if (colorSensorLeft.blue() > colorSensorLeft.red()) {
-                    jewelRotator.setPosition(vars.jewelRotatorLeftPosition);
+                    double pos = vars.jewelRotatorMidPosition;
+                    for (int i = 0; i < 4; i++) {
+                        pos -= .03;
+                        jewelRotator.setPosition(pos);
+                        sleep(250);
+                    }
                     telemetry.addData("Left", "Blah");
                     telemetry.update();
                 } else {
@@ -367,30 +387,30 @@ public class StateAuto extends LinearOpMode {
                         break;
                     case RIGHT:
                         // How long to drive backward
-                        sleep(750);
+                        sleep(800);
 
                         //Slide to the right
                         holonomic.run(0, .5, 0);
-                        sleep(750);
+                        sleep(650);
 
                         // Rotate based on vuMark
                         switch (vuMark) {
                             case LEFT:
                                 telemetry.addData("VuMark :", "Left");
                                 telemetry.update();
-                                rotateWide(RedRight[0]);
+                                rotateSuper(RedRight[0]);
                                 break;
                             case UNKNOWN:
                                 telemetry.addData("VuMark : !!!", "Null!!!");
                             case CENTER:
                                 telemetry.addData("VuMark :", "Center");
                                 telemetry.update();
-                                rotateWide(RedRight[1]);
+                                rotateSuper(RedRight[1]);
                                 break;
                             case RIGHT:
                                 telemetry.addData("VuMark :", "Right");
                                 telemetry.update();
-                                rotateWide(RedRight[2]);
+                                rotateSuper(RedRight[2]);
                                 break;
                         }
                         break;
@@ -472,6 +492,29 @@ public class StateAuto extends LinearOpMode {
                 telemetry.update();
 
                 temp = imuXAngle();
+            }
+        }
+        holonomic.stop();
+    }
+
+    void rotateSuper(int target) {
+        target = -target;
+        ElapsedTime time = new ElapsedTime();
+        time.reset();
+        time.startTime();
+        float temp = imuXAngle();
+        while (time.seconds() < 8 && opModeIsActive()) {
+            temp = imuXAngle();
+            telemetry.addData("IMU: ", temp);
+            telemetry.update();
+            if (target > 0 && temp < 0) {
+                holonomic.run(0, 0, .40 - (time.seconds() * .05));
+            } else if (target < 0 && temp > 0) {
+                holonomic.run(0, 0, -.40 + (time.seconds() * .05));
+            } else if (temp > target) {
+                holonomic.run(0, 0, .40 - (time.seconds() * .05));
+            } else if (temp < target) {
+                holonomic.run(0, 0, -.40 + (time.seconds() * .05));
             }
         }
         holonomic.stop();
